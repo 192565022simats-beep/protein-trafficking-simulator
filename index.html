@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protein Trafficking Simulator</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-icon">🧬</div>
+      <div class="brand-title">
+        <h1>Protein Trafficking Simulator</h1>
+        <p>Interactive Endomembrane Transport &amp; ER Quality Control Engine</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button id="soundToggleBtn" class="btn btn-icon" title="Toggle Sound">
+        <span id="soundIcon">🔊</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Simulator Layout -->
+  <main class="simulator-layout">
+
+    <!-- Primary Cellular Viewport & Stage Tracker -->
+    <section class="viewport-card">
+      <div class="viewport-toolbar">
+        <div class="playback-group">
+          <button id="playPauseBtn" class="btn btn-primary">
+            <span id="playPauseIcon">⏸</span>
+            <span id="playPauseText">Pause</span>
+          </button>
+          <button id="restartBtn" class="btn">
+            <span>🔄</span> Restart
+          </button>
+        </div>
+        <div class="telemetry-bar">
+          <span style="font-size: 11px; color: var(--text-dim);">Live Cytosolic Rendering (60 FPS)</span>
+        </div>
+      </div>
+
+      <!-- Canvas Viewport -->
+      <div class="canvas-container">
+        <canvas id="cellCanvas"></canvas>
+      </div>
+
+      <!-- Live Stage Progress Tracker -->
+      <nav class="stage-tracker-bar" aria-label="Cellular Stage Progress">
+        <div class="stage-step active" data-stage="translation">
+          <span class="step-num">Stage 1</span>
+          <span class="step-title">Translation</span>
+        </div>
+        <div class="stage-step" data-stage="er_folding">
+          <span class="step-num">Stage 2</span>
+          <span class="step-title">ER Folding</span>
+        </div>
+        <div class="stage-step erad-branch" data-stage="erad">
+          <span class="step-num">ERAD</span>
+          <span class="step-title">Proteasome</span>
+        </div>
+        <div class="stage-step" data-stage="copii_transport">
+          <span class="step-num">Stage 3</span>
+          <span class="step-title">COPII Vesicle</span>
+        </div>
+        <div class="stage-step" data-stage="golgi_processing">
+          <span class="step-num">Stage 4</span>
+          <span class="step-title">Golgi Stack</span>
+        </div>
+        <div class="stage-step" data-stage="secretory_vesicle">
+          <span class="step-num">Stage 5</span>
+          <span class="step-title">Secretory Vesicle</span>
+        </div>
+        <div class="stage-step" data-stage="exocytosis">
+          <span class="step-num">Stage 6</span>
+          <span class="step-title">Exocytosis</span>
+        </div>
+      </nav>
+    </section>
+
+    <!-- Sidebar: 3 Parameters, Presets, and Live Telemetry -->
+    <aside class="sidebar-panel">
+
+      <!-- EXACTLY THREE ADJUSTABLE SIMULATION PARAMETERS -->
+      <div class="control-card">
+        <div class="card-title">
+          <span>Simulation Parameters</span>
+          <span style="font-size: 10px; color: var(--text-dim); text-transform: none;">3 Core Controls</span>
+        </div>
+
+        <div class="slider-group">
+          <!-- Parameter 1: Protein Transport Speed (10% – 100%) -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="speedSlider">
+                <span>⚡ Transport Speed</span>
+              </label>
+              <span id="speedVal" class="val-badge">80%</span>
+            </div>
+            <input type="range" id="speedSlider" min="10" max="100" step="1" value="80">
+            <p class="slider-desc">Velocity of continuous protein particle &amp; vesicle trafficking.</p>
+          </div>
+
+          <!-- Parameter 2: ER Folding Efficiency (0% – 100%) -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="erFoldingSlider">
+                <span>🛡️ ER Folding Efficiency</span>
+              </label>
+              <span id="erFoldingVal" class="val-badge amber">95%</span>
+            </div>
+            <input type="range" id="erFoldingSlider" min="0" max="100" step="1" value="95">
+            <p class="slider-desc">Probability of native folding vs. ERAD proteasomal destruction.</p>
+          </div>
+
+          <!-- Parameter 3: Golgi Processing Rate (10% – 100%) -->
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="golgiRateSlider">
+                <span>✨ Golgi Processing Rate</span>
+              </label>
+              <span id="golgiRateVal" class="val-badge purple">85%</span>
+            </div>
+            <input type="range" id="golgiRateSlider" min="10" max="100" step="1" value="85">
+            <p class="slider-desc">Post-translational modification rate &amp; cisterna dwell duration.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Experiment Presets (3 Standard Scenarios) -->
+      <div class="control-card">
+        <div class="card-title">
+          <span>Experiment Presets</span>
+        </div>
+        <div class="presets-grid">
+          <button id="presetNormal" class="btn-preset active">
+            <span>🟢 Normal Protein Transport</span>
+            <span class="preset-params">Speed: 80% | ER Fold: 95% | Golgi: 85%</span>
+          </button>
+          <button id="presetMisfolding" class="btn-preset">
+            <span>🔴 ER Protein Misfolding</span>
+            <span class="preset-params">Speed: 70% | ER Fold: 15% | Golgi: 80%</span>
+          </button>
+          <button id="presetReduced" class="btn-preset">
+            <span>🟡 Reduced Transport Efficiency</span>
+            <span class="preset-params">Speed: 25% | ER Fold: 85% | Golgi: 30%</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-Time Biological Telemetry -->
+      <div class="control-card">
+        <div class="card-title">
+          <span>Live Telemetry</span>
+        </div>
+        <div class="telemetry-grid">
+          <div class="telemetry-item">
+            <span class="label">Elapsed Time</span>
+            <span id="statTime" class="value">0.0s</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="label">Conformation</span>
+            <span id="statConformation" class="value active">Unfolded</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="label">Proteins Secreted</span>
+            <span id="statSecreted" class="value success">0</span>
+          </div>
+          <div class="telemetry-item">
+            <span class="label">ERAD Degraded</span>
+            <span id="statErad" class="value warning">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Biological Event Log Stream -->
+      <div class="control-card" style="flex: 1;">
+        <div class="card-title">
+          <span>Event Stream</span>
+        </div>
+        <div id="logStream" class="log-stream"></div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <span>Protein Trafficking Simulator &bull; Endomembrane Secretory Pathway &amp; ER Quality Control</span>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
